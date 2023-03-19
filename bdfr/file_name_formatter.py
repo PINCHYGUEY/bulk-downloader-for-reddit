@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
+# coding=utf-8
 import datetime
 import logging
 import platform
@@ -27,26 +26,13 @@ class FileNameFormatter:
         "title",
         "upvotes",
     )
-    WINDOWS_MAX_PATH_LENGTH = 260
-    LINUX_MAX_PATH_LENGTH = 4096
 
-    def __init__(
-        self,
-        file_format_string: str,
-        directory_format_string: str,
-        time_format_string: str,
-        restriction_scheme: Optional[str] = None,
-    ):
+    def __init__(self, file_format_string: str, directory_format_string: str, time_format_string: str):
         if not self.validate_string(file_format_string):
             raise BulkDownloaderException(f'"{file_format_string}" is not a valid format string')
         self.file_format_string = file_format_string
         self.directory_format_string: list[str] = directory_format_string.split("/")
         self.time_format_string = time_format_string
-        self.restiction_scheme = restriction_scheme.lower().strip() if restriction_scheme else None
-        if self.restiction_scheme == "windows":
-            self.max_path = self.WINDOWS_MAX_PATH_LENGTH
-        else:
-            self.max_path = self.find_max_path_length()
 
     def _format_name(self, submission: Union[Comment, Submission], format_string: str) -> str:
         if isinstance(submission, Submission):
@@ -65,12 +51,9 @@ class FileNameFormatter:
 
         result = result.replace("/", "")
 
-        if self.restiction_scheme is None:
-            if platform.system() == "Windows":
-                result = FileNameFormatter._format_for_windows(result)
-        elif self.restiction_scheme == "windows":
-            logger.debug("Forcing Windows-compatible filenames")
+        if platform.system() == "Windows":
             result = FileNameFormatter._format_for_windows(result)
+
         return result
 
     @staticmethod
@@ -142,13 +125,14 @@ class FileNameFormatter:
             raise BulkDownloaderException(f"Could not determine path name: {subfolder}, {index}, {resource.extension}")
         return file_path
 
-    def limit_file_name_length(self, filename: str, ending: str, root: Path) -> Path:
+    @staticmethod
+    def limit_file_name_length(filename: str, ending: str, root: Path) -> Path:
         root = root.resolve().expanduser()
         possible_id = re.search(r"((?:_\w{6})?$)", filename)
         if possible_id:
             ending = possible_id.group(1) + ending
             filename = filename[: possible_id.start()]
-        max_path = self.max_path
+        max_path = FileNameFormatter.find_max_path_length()
         max_file_part_length_chars = 255 - len(ending)
         max_file_part_length_bytes = 255 - len(ending.encode("utf-8"))
         max_path_length = max_path - len(ending) - len(str(root)) - 1
@@ -172,9 +156,9 @@ class FileNameFormatter:
             return int(subprocess.check_output(["getconf", "PATH_MAX", "/"]))
         except (ValueError, subprocess.CalledProcessError, OSError):
             if platform.system() == "Windows":
-                return FileNameFormatter.WINDOWS_MAX_PATH_LENGTH
+                return 260
             else:
-                return FileNameFormatter.LINUX_MAX_PATH_LENGTH
+                return 4096
 
     def format_resource_paths(
         self,

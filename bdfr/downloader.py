@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# coding=utf-8
 
 import hashlib
 import logging.handlers
 import os
 import time
-from collections.abc import Iterable
 from datetime import datetime
 from multiprocessing import Pool
 from pathlib import Path
-from time import sleep
 
 import praw
 import praw.exceptions
@@ -37,23 +35,18 @@ def _calc_hash(existing_file: Path):
 
 
 class RedditDownloader(RedditConnector):
-    def __init__(self, args: Configuration, logging_handlers: Iterable[logging.Handler] = ()):
-        super(RedditDownloader, self).__init__(args, logging_handlers)
+    def __init__(self, args: Configuration):
+        super(RedditDownloader, self).__init__(args)
         if self.args.search_existing:
             self.master_hash_list = self.scan_existing_files(self.download_directory)
 
     def download(self):
         for generator in self.reddit_lists:
-            try:
-                for submission in generator:
-                    try:
-                        self._download_submission(submission)
-                    except prawcore.PrawcoreException as e:
-                        logger.error(f"Submission {submission.id} failed to download due to a PRAW exception: {e}")
-            except prawcore.PrawcoreException as e:
-                logger.error(f"The submission after {submission.id} failed to download due to a PRAW exception: {e}")
-                logger.debug("Waiting 60 seconds to continue")
-                sleep(60)
+            for submission in generator:
+                try:
+                    self._download_submission(submission)
+                except prawcore.PrawcoreException as e:
+                    logger.error(f"Submission {submission.id} failed to download due to a PRAW exception: {e}")
 
     def _download_submission(self, submission: praw.models.Submission):
         if submission.id in self.excluded_submission_ids:
@@ -156,7 +149,7 @@ class RedditDownloader(RedditConnector):
     @staticmethod
     def scan_existing_files(directory: Path) -> dict[str, Path]:
         files = []
-        for (dirpath, _dirnames, filenames) in os.walk(directory):
+        for (dirpath, dirnames, filenames) in os.walk(directory):
             files.extend([Path(dirpath, file) for file in filenames])
         logger.info(f"Calculating hashes for {len(files)} files")
 

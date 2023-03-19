@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import logging
 import tempfile
-from collections.abc import Callable
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 import yt_dlp
 from praw.models import Submission

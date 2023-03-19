@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import json
 import re
@@ -23,7 +22,7 @@ class Gfycat(Redgifs):
 
     @staticmethod
     def _get_link(url: str) -> set[str]:
-        gfycat_id = re.match(r".*/(.*?)(?:/?|-.*|\..{3-4})$", url).group(1)
+        gfycat_id = re.match(r".*/(.*?)/?$", url).group(1)
         url = "https://gfycat.com/" + gfycat_id
 
         response = Gfycat.retrieve_url(url)

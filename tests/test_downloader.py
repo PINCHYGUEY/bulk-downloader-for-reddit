@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-import logging
+# coding=utf-8
+
+import os
 import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -8,14 +9,10 @@ from unittest.mock import MagicMock, patch
 import praw.models
 import pytest
 
-from bdfr.__main__ import make_console_logging_handler
+from bdfr.__main__ import setup_logging
 from bdfr.configuration import Configuration
 from bdfr.connector import RedditConnector
 from bdfr.downloader import RedditDownloader
-
-
-def add_console_handler():
-    logging.getLogger().addHandler(make_console_logging_handler(3))
 
 
 @pytest.fixture()
@@ -117,12 +114,12 @@ def test_file_creation_date(
     RedditDownloader._download_submission(downloader_mock, submission)
 
     for file_path in Path(tmp_path).iterdir():
-        file_stats = Path(file_path).stat()
+        file_stats = os.stat(file_path)
         assert file_stats.st_mtime == test_creation_date
 
 
 def test_search_existing_files():
-    results = RedditDownloader.scan_existing_files(Path())
+    results = RedditDownloader.scan_existing_files(Path("."))
     assert len(results.keys()) != 0
 
 
@@ -137,7 +134,7 @@ def test_download_submission_hash_exists(
     tmp_path: Path,
     capsys: pytest.CaptureFixture,
 ):
-    add_console_handler()
+    setup_logging(3)
     downloader_mock.reddit_instance = reddit_instance
     downloader_mock.download_filter.check_url.return_value = True
     downloader_mock.args.folder_scheme = ""
@@ -158,7 +155,7 @@ def test_download_submission_hash_exists(
 def test_download_submission_file_exists(
     downloader_mock: MagicMock, reddit_instance: praw.Reddit, tmp_path: Path, capsys: pytest.CaptureFixture
 ):
-    add_console_handler()
+    setup_logging(3)
     downloader_mock.reddit_instance = reddit_instance
     downloader_mock.download_filter.check_url.return_value = True
     downloader_mock.args.folder_scheme = ""
@@ -170,7 +167,9 @@ def test_download_submission_file_exists(
     folder_contents = list(tmp_path.iterdir())
     output = capsys.readouterr()
     assert len(folder_contents) == 1
-    assert "Arneeman_Metagaming isn't always a bad thing_m1hqw6.png from submission m1hqw6 already exists" in output.out
+    assert (
+        "Arneeman_Metagaming isn't always a bad thing_m1hqw6.png" " from submission m1hqw6 already exists" in output.out
+    )
 
 
 @pytest.mark.online
@@ -205,7 +204,7 @@ def test_download_submission_min_score_above(
     tmp_path: Path,
     capsys: pytest.CaptureFixture,
 ):
-    add_console_handler()
+    setup_logging(3)
     downloader_mock.reddit_instance = reddit_instance
     downloader_mock.download_filter.check_url.return_value = True
     downloader_mock.args.folder_scheme = ""
@@ -229,7 +228,7 @@ def test_download_submission_min_score_below(
     tmp_path: Path,
     capsys: pytest.CaptureFixture,
 ):
-    add_console_handler()
+    setup_logging(3)
     downloader_mock.reddit_instance = reddit_instance
     downloader_mock.download_filter.check_url.return_value = True
     downloader_mock.args.folder_scheme = ""
@@ -253,7 +252,7 @@ def test_download_submission_max_score_below(
     tmp_path: Path,
     capsys: pytest.CaptureFixture,
 ):
-    add_console_handler()
+    setup_logging(3)
     downloader_mock.reddit_instance = reddit_instance
     downloader_mock.download_filter.check_url.return_value = True
     downloader_mock.args.folder_scheme = ""
@@ -277,7 +276,7 @@ def test_download_submission_max_score_above(
     tmp_path: Path,
     capsys: pytest.CaptureFixture,
 ):
-    add_console_handler()
+    setup_logging(3)
     downloader_mock.reddit_instance = reddit_instance
     downloader_mock.download_filter.check_url.return_value = True
     downloader_mock.args.folder_scheme = ""

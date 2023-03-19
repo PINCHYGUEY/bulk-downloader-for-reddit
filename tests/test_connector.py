@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-from collections.abc import Iterator
+# coding=utf-8
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Iterator
 from unittest.mock import MagicMock
 
 import praw
@@ -167,7 +166,6 @@ def test_create_authenticator(downloader_mock: MagicMock):
         ("lvpf4l",),
         ("lvpf4l", "lvqnsn"),
         ("lvpf4l", "lvqnsn", "lvl9kd"),
-        ("1000000",),
     ),
 )
 def test_get_submissions_from_link(
@@ -254,7 +252,7 @@ def test_get_subreddit_time_verification(
     for r in results:
         result_time = datetime.fromtimestamp(r.created_utc)
         time_diff = nowtime - result_time
-        assert time_diff < (test_delta + timedelta(minutes=1))
+        assert time_diff < test_delta
 
 
 @pytest.mark.online
@@ -336,7 +334,7 @@ def test_get_multireddits_public(
     (
         ("danigirl3694", 10),
         ("danigirl3694", 50),
-        ("nasa", None),
+        ("CapitanHam", None),
     ),
 )
 def test_get_user_submissions(test_user: str, limit: int, downloader_mock: MagicMock, reddit_instance: praw.Reddit):
